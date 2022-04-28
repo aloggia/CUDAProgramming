@@ -61,9 +61,13 @@ int main() {
     float  cpu_x [256];
     float cpu_y [256];
 
-    h_x = new float [N];
-    h_y = new float [N];
-    h_partialSum = new float [THREADS_PER_BLOCK];
+    //h_x = new float [N];
+    //h_y = new float [N];
+    //h_partialSum = new float [THREADS_PER_BLOCK];
+    h_x = (float *)malloc(N*sizeof(float));
+    h_y = (float *)malloc(N*sizeof(float));
+    h_partialSum = (float *)malloc(THREADS_PER_BLOCK*sizeof(float));
+    
 
     cudaMalloc((void **)&d_x, N * sizeof(float));
     cudaMalloc((void **)&d_y, N * sizeof(float));
@@ -111,8 +115,12 @@ int main() {
 
     }
 
-
+    /*
     delete [] h_x;
     delete [] h_y;
     delete [] h_partialSum;
+    */
+    free(h_x);
+    free(h_y);
+    free(h_partialSum);
 }
