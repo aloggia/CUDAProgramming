@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -101,10 +102,14 @@ int main() {
 
     }
 
-
+    /*
     delete [] h_x;
     delete [] h_y;
     delete [] h_partialSum;
+    */
+    free(h_x);
+    free(h_y);
+    free(h_partialSum);
 }
 
 float dot_product(float *u, float *v, int n) {
