@@ -18,21 +18,20 @@ __global__ void dotp(const float *u, const float *v, float *partialSum, int n) {
     int stride = blockDim.x * gridDim.x;
     float temp = 0.0;
 
-    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < n; i += stride)
-        temp += u[i] * v[i];
+    for (int tidx = blockIdx.x * blockDim.x + threadIdx.x; tidx < n; tidx += stride)
+        temp += u[tidx] * v[tidx];
     cache[cacheIndex] = temp;
     __syncthreads();
 
     int i = blockDim.x / 2;
     while (i > 0) {
         if (cacheIndex < i)
-            cache[cacheIndex] += cache[cacheIndex + i];
+            cache[cacheIndex] = cache[cacheIndex] + cache[cacheIndex + i];
         __syncthreads();
         i /= 2;
     }
-    if (cacheIndex == 0) {
+    if (cacheIndex == 0)
         partialSum[blockIdx.x] = cache[cacheIndex];
-    }
 
 
 }
@@ -42,6 +41,10 @@ __global__ void add(const int *x, const int *y, int *z, int n) {
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < n; i = i + stride) {
         z[i] = x[i] + y[i];
     }
+}
+
+__global__ void MxV (float *M, float *x, float *y, size_t pitch, int n) {
+
 }
 
 int main() {
@@ -55,10 +58,10 @@ int main() {
 
     h_x = (float *)malloc(N * sizeof(float));
     h_y = (float *) malloc(N * sizeof(float));
-    h_partialSum = (float *) malloc(THREADS_PER_BLOCK* sizeof(float ));
+    h_partialSum = (float *) malloc(NUM_BLOCKS* sizeof(float ));
     cudaMalloc(&d_x, N * sizeof(float));
     cudaMalloc(&d_y, N * sizeof(float));
-    cudaMalloc(&d_partialSum, THREADS_PER_BLOCK * sizeof(float));
+    cudaMalloc(&d_partialSum, NUM_BLOCKS * sizeof(float));
 
     //h_x = (float*)malloc(N * sizeof(float));
     //h_y = (float*) malloc(N * sizeof(float));
@@ -92,6 +95,8 @@ int main() {
     cout << "Value calculated from the GPU: " << gpuResult << endl;
 
     cout << "Value calculated from the CPU: " << dot_product(cpu_x, cpu_y, N) << endl;
+
+    cout << "Relative error: " << abs(gpuResult - dot_product(cpu_x, cpu_y, N)) / abs(gpuResult) << endl;
 
 
     cudaFree(d_x);
